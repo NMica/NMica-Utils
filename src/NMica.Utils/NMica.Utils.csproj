@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup Label="Nuget">
+    <PackageId>NMica.Utils</PackageId>
+    <Authors>Andrew Stakhov</Authors>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <Description>General purpose methods and utilities to enchance standard .NET libs. Most are based on helper methods from Nuke.Common library.</Description>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+  </PropertyGroup>
+  <PropertyGroup>
+    <TargetFrameworks>net472;net6.0</TargetFrameworks>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <RootNamespace>NMica.Utils</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="JetBrains.Annotations" Version="2021.3.0" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All"/>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\licenses\**" Pack="true" PackagePath="licenses" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="CallerArgumentExpressionAttribute.cs" Condition="'$(TargetFramework)' == 'net6.0'" />
+  </ItemGroup>
+
+</Project>
