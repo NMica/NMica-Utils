@@ -165,7 +165,8 @@ namespace NMica.Utils
             {
                 var memberName = interfaceMembers.Key;
                 var memberType = interfaceMembers.First().MemberType;
-                var classMember = classMembers.GetValueOrDefault(memberName);
+                classMembers.TryGetValue(memberName, out var classMember);
+
 
                 if (filterQuasiOverridden && classMember == null && interfaceMembers.Count() > 1)
                 {

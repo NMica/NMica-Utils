@@ -17,7 +17,6 @@ using static Nuke.Common.IO.FileSystemTasks;
 using static Nuke.Common.IO.PathConstruction;
 using static Nuke.Common.Tools.DotNet.DotNetTasks;
 
-[CheckBuildProjectConfigurations]
 [ShutdownDotNetAfterServerBuild]
 class Build : NukeBuild
 {
@@ -40,6 +39,7 @@ class Build : NukeBuild
     [Solution] readonly Solution Solution;
     bool IsCurrentBranchCommitted() => !GitRepository.RetrieveStatus().IsDirty;
     [GitRepositoryExt] LibGit2Sharp.Repository GitRepository;
+    [NerdbankGitVersioning]
     NerdbankGitVersioning GitVersion;
 
     string NugetVersion => IsCurrentBranchCommitted() ? GitVersion.NuGetPackageVersion : $"{GitVersion.SemVer2}-local";
@@ -50,21 +50,21 @@ class Build : NukeBuild
 
     protected override void OnBuildInitialized()
     {
-        GitVersion = NerdbankGitVersioningTasks.NerdbankGitVersioningGetVersion(s => s
-                .DisableProcessLogOutput()
-                .SetProcessWorkingDirectory(RootDirectory)
-                .SetProject(@"src/NMica.Utils")
-                .SetFormat(NerdbankGitVersioningFormat.json))
-            .Result;
+        // GitVersion = NerdbankGitVersioningTasks.NerdbankGitVersioningGetVersion(s => s
+        //         .DisableProcessLogOutput()
+        //         .SetProcessWorkingDirectory(RootDirectory)
+        //         .SetProject("src/NMica.Utils")
+        //         .SetFormat(NerdbankGitVersioningFormat.json))
+        //     .Result;
     }
 
     Target Clean => _ => _
         .Before(Restore)
         .Executes(() =>
         {
-            SourceDirectory.GlobDirectories("**/bin", "**/obj").ForEach(DeleteDirectory);
-            TestsDirectory.GlobDirectories("**/bin", "**/obj").ForEach(DeleteDirectory);
-            EnsureCleanDirectory(ArtifactsDirectory);
+            SourceDirectory.GlobDirectories("**/bin", "**/obj").ForEach(x => x.DeleteDirectory());
+            TestsDirectory.GlobDirectories("**/bin", "**/obj").ForEach(x => x.DeleteDirectory());
+            ArtifactsDirectory.CreateOrCleanDirectory();
         });
 
     Target Restore => _ => _
@@ -77,7 +77,7 @@ class Build : NukeBuild
     Target Pack => _ => _
         .Executes(() =>
         {
-            EnsureCleanDirectory(ArtifactsDirectory);
+            ArtifactsDirectory.CreateOrCleanDirectory();
             DotNetPack(s => s
                 .SetProject(Solution)
                 .EnableContinuousIntegrationBuild()
@@ -87,7 +87,7 @@ class Build : NukeBuild
         });
     Target NugetPush => _ => _
         .Requires(() => NugetApiKey, () => Source)
-        .OnlyWhenStatic(() => IsCurrentBranchCommitted())
+        .OnlyWhenStatic(IsCurrentBranchCommitted)
         .DependsOn(Pack)
         .Executes(() =>
         {
